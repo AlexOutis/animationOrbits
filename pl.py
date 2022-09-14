@@ -3,16 +3,27 @@ import matplotlib.pyplot as plt
 import math 
 from mpl_toolkits import mplot3d
 import matplotlib.animation as animation
-fig = plt.figure(figsize = (20,20))
+
+fig = plt.figure(figsize = (10,10))
 ax = fig.add_subplot(111, projection='3d')
-cos = np.cos
-sin = np.sin
-tan = np.tan
-arcsin = np.arcsin
-arccos = np.arccos
-pi = math.pi
-floor = math.floor
-params =np.array([[90, 0.08874, 7.14043, 2.36179, 151.19853, 103.85136, 'g'], [90, 0.0167086, 0.00005, 1, 114.21, -11.26064, 'b'], [90, 0.0934, 1.850, 1.5237, 286.5, 49.57854, 'r'], [0, 0.0489, 1.303, 5.2038, 273.867, 100.464, 'k']])
+cos = np.cos;sin = np.sin;tan = np.tan
+arcsin = np.arcsin;arccos = np.arccos; pi = math.pi; floor = math.floor
+params = np.empty((0, 6))
+filename = input("Input file's name: ")
+f = open(filename, 'r')
+
+def addParams(params, ln):
+    e, i, a, w, om = map(float, ln.split()[:5])
+    col = ln.split()[5]
+    params = np.append(params, np.array([[e, i, a, w, om, col]]), axis=0)
+    return params
+ln = f.readline()
+
+while ln:
+    params = addParams(params, ln)
+    ln = f.readline()
+
+
 dots = []
 
 years = int(input("Choose animation duration (in years, for example 10): "))
@@ -35,9 +46,9 @@ def calcE(M, e):
         E = M + e * sin(E) 
     return E
 
-def updateRF(a, e, t, tau, Per):
+def updateRF(a, e, t, Per):
     Per = Per * 365.25
-    M = 2 * pi/Per * (t - tau)
+    M = 2 * pi/Per * t
     E_eSinE = M
     E = calcE(M, e)
     rnow = a*(1 - e *cos(E))
@@ -79,8 +90,8 @@ def drawOrbit(e, i, a, w, om, col):
 
 
 
-def calcPos(e, i, a, w, om, dt, tau):
-    e = float(e); i = float(i); a= float(a); w = float(w); om = float(om); dt = float(dt); tau = float(tau)
+def calcPos(e, i, a, w, om, dt):
+    e = float(e); i = float(i); a= float(a); w = float(w); om = float(om); dt = float(dt)
     i = math.radians(i)
     w = math.radians(w)
     om = math.radians(om)
@@ -91,7 +102,7 @@ def calcPos(e, i, a, w, om, dt, tau):
     t = 0
     x, y, z = [np.empty(animFrames) for i in range(3)]
     for i in range(animFrames):
-        r, f = updateRF(a,e, t, tau, Per)
+        r, f = updateRF(a,e, t, Per)
         sinb = sini * math.sin(w + f)
         tanlom = cosi * tan(w + f)
         lom = np.arctan(tanlom)
@@ -108,7 +119,7 @@ def calcPos(e, i, a, w, om, dt, tau):
     
 def init_dots():
     for param in params:
-        dots.append(ax.plot([0], [0], [0], f'{param[6]}o')[0])
+        dots.append(ax.plot([0], [0], [0], f'{param[5]}o')[0])
 
 def animate(k):
     ax.set_title(f'{k*animSpeed} days')
@@ -120,7 +131,7 @@ def animate(k):
 def maxLim():
     x = 0
     for param in params:
-        x = max(float(param[3]), x)
+        x = max(float(param[2]), x)
     return x
 
 ax.plot([0], [0], [0], 'yo')
@@ -137,13 +148,12 @@ init_dots()
 coords = np.empty([0, 3, animFrames])
 
 for param in params:
-    drawOrbit(*param[1:])
-    temp = np.array(calcPos(*param[1:6], animSpeed, 0))
+    drawOrbit(*param)
+    temp = np.array(calcPos(*param[:5], animSpeed))
     temp = np.reshape(temp, (1, 3, animFrames))
     coords = np.append(coords, temp, axis=0)
 
 ax.set_title('Visualisation of orbits')
 
-myAnimation = animation.FuncAnimation(fig, animate, frames = animFrames, interval = 20, repeat=True)
-#myAnimation.save('orbits.gif')
+myAnimation = animation.FuncAnimation(fig, animate, frames = animFrames, interval = 40, repeat=True)
 plt.show()
