@@ -1,3 +1,7 @@
 Simple animation of orbital mechanics
-TO DO: GUI to be able to add/remove orbits and change orbital elements
-(It is possible to do it now, but you have to manually change array "params")
+
+To change orbital elements, write them in a separate file in format:
+eccentricity inclination semi-major_axis Argument_of_perihelion Longitude_of_ascending_node Colour_Code
+
+Allowed colour codes: b, g, r, c, m, y, k
+
