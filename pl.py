@@ -30,14 +30,25 @@ animSpeed = 10
 animFrames = floor(animDur / animSpeed)
 gm = 39.4784176
 
+def absVect(vect):
+    return math.sqrt(vect[0]**2 + vect[1]**2+vect[2]**2)
+
+def updateVect(pos, vel, dt):
+    temp  = gm/(absVect(pos)**3)
+    acc = -temp * pos
+    vel += acc * dt
+    pos += vel * dt
+    return (pos, vel)
+
 def drdt(u, t):
     temp = -gm/((u[0]**2+u[1]**2+u[2]**2)**1.5)
     return (u[3], u[4], u[5], temp*u[0], temp*u[1], temp*u[2])
 
 def iterE(M, e):
     E = M
-    for i in range(8):
-        E = M + e * sin(E) 
+    for i in range(3):
+        cosE = cos(E); sinE = sin(E)
+        E = (E*e*cosE - M - e*sinE)/(e*cosE-1)
     return E
 
 def updateRF(a, e, t, Per):
@@ -77,7 +88,7 @@ def initPos(r, a, i, w, om):
     pos, vel = [np.empty(3) for _ in range(2)]
     sinw = sin(w); cosw= cos(w)
     sinom = sin(om); cosom=cos(om)
-    sinb = sini * sin(w)
+    sinb = sini * sinw
     tanlom = cosi * tan(w)
     lom = np.arctan(tanlom)
     if (sin(lom)* cosi*sin(w)) <  0:
@@ -101,11 +112,32 @@ def calcPos(e, i, a, w, om, dt):
     Per = a**1.5
     sini = sin(i); cosi = cos(i)
     r, f = updateRF(a, e, 0, Per)
-    pos, vel = initPos(r, a, i, w, om)    
-    
+    pos, vel = initPos(r, a, i, w, om) 
     y0 =  [*pos, *vel]
-    loc = odeint(drdt, y0, np.arange(0, 10, 10/animFrames))
+    loc = odeint(drdt, y0, np.arange(0, years, years/animFrames))
     x = loc[:,0]; y = loc[:,1];z=loc[:,2]
+    return [x, y, z]
+    
+def calcPos2(e, i, a, w, om, dt):
+    e, i, a, w, om, dt = map(float, [e, i, a, w, om, dt])
+    i, w, om = map(math.radians, [i, w, om])
+    Per = a**1.5
+    sini = sin(i); cosi = cos(i)
+    r, f = updateRF(a, e, 0, Per)
+    pos, vel = initPos(r, a, i, w, om)    
+    t = 0; dt/=365.25
+    x, y, z = [np.empty(animFrames) for i in range(3)]
+    extraSteps = 10
+    dtt = dt/extraSteps
+    for j in range(animFrames):
+    	k = 0
+    	for k in range(extraSteps):
+    	    pos, vel = updateVect(pos, vel, dtt)
+    	    t += dtt
+        
+    	x[j] = pos[0]
+    	y[j] = pos[1]
+    	z[j] = pos[2] 
     return [x, y, z]
     
 def init_dots():
