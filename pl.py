@@ -147,7 +147,7 @@ def init_dots():
 def animate(k):
     ax.set_title(f'{k*animSpeed} days')
     for j in range(params.shape[0]):
-        dots[j].set_data_3d(coords[j][0][k], coords[j][1][k], coords[j][2][k])
+        dots[j].set_data_3d([coords[j][0][k]], [coords[j][1][k]], [coordsp[j][2][k]])
     
     return dots
 
